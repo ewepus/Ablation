@@ -19,9 +19,7 @@ public class Player : MonoBehaviour
 
         if (inputVector.magnitude > 0.1f)
         {
-            rigidbody.linearVelocity = inputVector * movementSpeed;
+            rigidbody.AddForce(inputVector * movementSpeed, ForceMode2D.Force);
         }
-
-        //rigidbody.MovePosition(rigidbody.position + inputVector * (movementSpeed * Time.fixedDeltaTime));
     }
 }
