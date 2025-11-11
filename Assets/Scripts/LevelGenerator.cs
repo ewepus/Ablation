@@ -2,12 +2,13 @@ using System.Collections.Generic;
 using System.Xml.Serialization;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class LevelGenerator : MonoBehaviour {
     enum gridSpace { empty, floor, wall };
     gridSpace[,] grid;
     int roomHeight, roomWidth;
-    Vector2 roomSizeWorldUnits = new Vector2(30, 30);
+    [SerializeField] Vector2 roomSizeWorldUnits = new Vector2(30, 30);
     float worldUnitsInOneGridCell = 1;
     struct walker {
         public Vector2 dir;
@@ -16,9 +17,14 @@ public class LevelGenerator : MonoBehaviour {
     List<walker> walkers;
     [SerializeField] float chanceWalkerChangeDir = 0.5f, chanceWalkerSpawn = 0.05f;
     [SerializeField] float chanceWalkerDestroy = 0.05f;
+    [SerializeField] int amountOfStartingWalkers = 1;
     [SerializeField] int maxWalkers = 10;
     [SerializeField] float percentToFill = 0.2f;
-    public GameObject wallObj, floorObj;
+    [SerializeField] Tile wallTile;
+    [SerializeField] RuleTile floorRuleTile;
+    [SerializeField] Tilemap tilemapFloor;
+    [SerializeField] Tilemap tilemapWalls;
+
 
     private void Start() {
         Setup();
@@ -48,15 +54,17 @@ public class LevelGenerator : MonoBehaviour {
         //init list
         walkers = new List<walker>();
 
-        //create a walker
-        walker walker = new walker();
-        walker.dir = RandomDirection();
+        for (int i = 0; i < amountOfStartingWalkers; i++) {
+            //create a walker
+            walker walker = new walker();
+            walker.dir = RandomDirection();
 
-        //find center of the grid
-        Vector2 spawnPosition = new Vector2(Mathf.RoundToInt(roomWidth / 2f),
-                                            Mathf.RoundToInt(roomHeight / 2f));
-        walker.pos = spawnPosition;
-        walkers.Add(walker);
+            //find center of the grid
+            Vector2 spawnPosition = new Vector2(Mathf.RoundToInt(roomWidth / 2f),
+                                                Mathf.RoundToInt(roomHeight / 2f));
+            walker.pos = spawnPosition;
+            walkers.Add(walker);
+        }
     }
 
     private Vector2 RandomDirection() {
@@ -159,24 +167,32 @@ public class LevelGenerator : MonoBehaviour {
                     case gridSpace.empty:
                         break;
                     case gridSpace.floor:
-                        Spawn(x, y, floorObj);
+                        SpawnRuleTile(x, y, floorRuleTile, tilemapFloor);
                         break;
                     case gridSpace.wall:
-                        Spawn(x, y, wallObj);
+                        SpawnTile(x, y, wallTile, tilemapWalls);
                         break;
                 }
             }
         }
     }
 
-    private void Spawn(int x, int y, GameObject gameObject) {
+    private void SpawnTile(int x, int y, Tile tile, Tilemap tilemap) {
         //find the position to spawn
         //offset lets center the grid in the scene
         Vector2 offset = roomSizeWorldUnits / 2.0f;
         Vector2 spawnPosition = new Vector2(x, y) * worldUnitsInOneGridCell - offset;
+        Vector3Int vector3Int = new Vector3Int((int)spawnPosition.x, (int)spawnPosition.y);
 
         //spawn an object!
-        Instantiate(gameObject, spawnPosition, Quaternion.identity);
+        tilemap.SetTile(vector3Int, tile);
+    }
+    private void SpawnRuleTile(int x, int y, RuleTile ruleTile, Tilemap tilemap) {
+        Vector2 offset = roomSizeWorldUnits / 2.0f;
+        Vector2 spawnPosition = new Vector2(x, y) * worldUnitsInOneGridCell - offset;
+        Vector3Int vector3Int = new Vector3Int((int)spawnPosition.x, (int)spawnPosition.y);
+
+        tilemap.SetTile(vector3Int, ruleTile);
     }
 
     private void CreateWalls() {
