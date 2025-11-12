@@ -24,10 +24,10 @@ public class LevelGenerator : MonoBehaviour {
     [SerializeField] RuleTile floorRuleTile;
     [SerializeField] Tilemap tilemapFloor;
     [SerializeField] Tilemap tilemapWalls;
-
-
-    private void Start() {
+    public void Start() {
         Setup();
+        EraseTiles(tilemapWalls);
+        EraseTiles(tilemapFloor);
         CreateFloors();
         CreateWalls();
         //RemoveSingleWalls();
@@ -215,6 +215,18 @@ public class LevelGenerator : MonoBehaviour {
                         grid[x - 1, y] = gridSpace.wall;
                     }
                 }
+            }
+        }
+    }
+
+    private void EraseTiles(Tilemap tilemap) {
+        for (int x = 0; x < roomWidth; x++) {
+            for (int y = 0; y < roomHeight; y++) {
+                Vector2 offset = roomSizeWorldUnits / 2.0f;
+                Vector2 spawnPosition = new Vector2(x, y) * worldUnitsInOneGridCell - offset;
+                Vector3Int vector3Int = new Vector3Int((int)spawnPosition.x, (int)spawnPosition.y);
+
+                tilemap.SetTile(vector3Int, null);
             }
         }
     }
